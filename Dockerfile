@@ -1,5 +1,5 @@
 FROM maven:latest AS build
-COPY ../../.. /url-shortener-u
+COPY . /url-shortener-u
 WORKDIR /url-shortener-u
 RUN mvn clean package -DskipTests
 
