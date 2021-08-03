@@ -4,13 +4,14 @@ import by.solbegsoft.shortener.demo.common.ProtocolChecker;
 import by.solbegsoft.shortener.demo.common.StringGenerator;
 import by.solbegsoft.shortener.demo.exception.ShortUrlNotFoundException;
 import by.solbegsoft.shortener.demo.model.Url;
-import by.solbegsoft.shortener.demo.dto.UrlCreateDto;
+import by.solbegsoft.shortener.demo.dto.UrlCreateRequest;
 import by.solbegsoft.shortener.demo.repository.UrlRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -38,11 +39,12 @@ public class UrlService {
         }
     }
 
-    public Url save(UrlCreateDto urlCreateDto) {
-        urlCreateDto.setOriginUrl(ProtocolChecker.setPrefix(urlCreateDto.getOriginUrl()));
+    public Url save(UrlCreateRequest request) {
+        request.setOriginUrl(ProtocolChecker.setPrefix(request.getOriginUrl()));
         Url url = new Url();
-        url.setOriginUrl(urlCreateDto.getOriginUrl());
+        url.setOriginUrl(request.getOriginUrl());
         url.setShortUrl(StringGenerator.generate(10));
+        url.setUserUuid(UUID.fromString(request.getUserUuid()));
         url = urlRepository.save(url);
         log.info("Successfully save url" + url);
         return url;

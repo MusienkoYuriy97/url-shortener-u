@@ -13,6 +13,11 @@ public class Url {
     @Id
     @GeneratedValue
     private UUID uuid;
+
     private String originUrl;
+
     private String shortUrl;
+
+    @Column(name = "user_uuid", nullable = false)
+    private UUID userUuid;
 }
