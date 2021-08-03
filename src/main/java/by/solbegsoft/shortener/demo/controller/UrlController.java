@@ -1,7 +1,6 @@
 package by.solbegsoft.shortener.demo.controller;
 
-import by.solbegsoft.shortener.demo.model.Url;
-import by.solbegsoft.shortener.demo.dto.UrlCreateDto;
+import by.solbegsoft.shortener.demo.dto.UrlCreateRequest;
 import by.solbegsoft.shortener.demo.service.UrlService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +24,7 @@ public class UrlController {
 
     @GetMapping("/{shortUrlKey}")
     public ResponseEntity<?> redirect(@PathVariable String shortUrlKey){
-        log.debug("shortUrlKey from user: " + shortUrlKey);
         String redirectUrl = urlService.getOriginUrlByShortUrl(shortUrlKey);
-        log.debug("shortUrlKey from user: " + shortUrlKey);
         return ResponseEntity
                 .status(HttpStatus.MOVED_PERMANENTLY)
                 .location(URI.create(redirectUrl))
@@ -35,10 +32,8 @@ public class UrlController {
     }
 
     @PostMapping
-    public ResponseEntity<?> save(@Valid @RequestBody UrlCreateDto urlCreateDto){
-        log.debug("Input data from user: " + urlCreateDto);
-        Url url = urlService.save(urlCreateDto);
-        log.debug("User service return: " + url);
-        return new ResponseEntity<>(url, HttpStatus.OK);
+    public ResponseEntity<?> save(@Valid @RequestBody UrlCreateRequest request){
+        return new ResponseEntity<>(urlService.save(request),
+                HttpStatus.CREATED);
     }
 }
