@@ -7,9 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/url")
@@ -26,15 +26,15 @@ public class UrlController {
                 .build();
     }
 
-    @GetMapping("/getall/{userUuid}")
-    public ResponseEntity<?> getAll(@PathVariable String userUuid){
-        return new ResponseEntity<>(urlService.getAllByUuid(UUID.fromString(userUuid)),
+    @GetMapping("/get-all")
+    public ResponseEntity<?> getAll(HttpServletRequest request){
+        return new ResponseEntity<>(urlService.getAllByUuid(request),
                 HttpStatus.OK);
     }
 
     @PostMapping("/save")
-    public ResponseEntity<?> save(@Valid @RequestBody UrlCreateRequest request){
-        return new ResponseEntity<>(urlService.save(request),
+    public ResponseEntity<?> save(@Valid @RequestBody UrlCreateRequest urlCreateRequest, HttpServletRequest request){
+        return new ResponseEntity<>(urlService.save(urlCreateRequest, request),
                 HttpStatus.CREATED);
     }
 }
