@@ -1,28 +1,18 @@
 package by.solbegsoft.shortener.demo.security;
 
-import by.solbegsoft.shortener.demo.exception.JwtAuthenticationException;
+import by.solbegsoft.shortener.demo.exception.JwtTokenException;
 import io.jsonwebtoken.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
 import java.util.Base64;
 import java.util.Date;
 
-
 @Component
 public class JwtTokenProvider {
-    @Autowired
-    private UserDetailsService userDetailsService;
-
     @Value("${jwt.secret}")
     private String secretKey;
     @Value("${jwt.header}")
@@ -35,44 +25,34 @@ public class JwtTokenProvider {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 
+    public String getUuid(){
+        String bearerToken = getBearerToken();
+        if (bearerToken == null){
+            throw new JwtTokenException("Jwt token cannot be null");
+        }
+        String token = bearerToken.replace(prefix,"");
+        if (validateToken(token)){
+            return Jwts.parser()
+                    .setSigningKey(secretKey)
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .get("uuid", String.class);
+        }else {
+            throw new JwtTokenException("Jwt token is expired!");
+        }
+    }
 
-    public boolean validateToken(String token){
+    private boolean validateToken(String token){
         try {
             Jws<Claims> claimsJws = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
             return !claimsJws.getBody().getExpiration().before(new Date());
         }catch (JwtException | IllegalArgumentException e){
-            throw new JwtAuthenticationException("Jwt token is expired or invalid!", HttpStatus.UNAUTHORIZED);
+            throw new JwtTokenException("Jwt token is invalid!");
         }
     }
 
-    public Authentication getAuthentication(String token){
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(getEmail(token));
-        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
-    }
-
-    public String getEmail(String bearerToken){
-        String token = bearerToken.replace(prefix,"");
-        return Jwts.parser()
-                .setSigningKey(secretKey)
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
-    }
-
-    public String getUuid(String bearerToken){
-        String token = bearerToken.replace(prefix,"");
-        return Jwts.parser()
-                .setSigningKey(secretKey)
-                .parseClaimsJws(token)
-                .getBody()
-                .get("uuid", String.class);
-    }
-
-    public String resolveToken(HttpServletRequest request){
-        return request.getHeader(header);
-    }
-
-    public String getPrefix() {
-        return prefix;
+    private String getBearerToken(){
+        return  ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
+                .getRequest().getHeader("Authorization");
     }
 }
