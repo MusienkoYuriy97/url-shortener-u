@@ -2,6 +2,7 @@ package by.solbegsoft.shortener.demo.exception;
 
 import by.solbegsoft.shortener.demo.dto.CustomErrorResponse;
 import lombok.NonNull;
+import org.postgresql.util.PSQLException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,4 +51,10 @@ public class ExceptionsHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<?> shortUrlNotFound(Exception e) {
         return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<?> ex(Exception e) {
+        return new ResponseEntity<>("Check input data and try refresh", HttpStatus.BAD_REQUEST);
+    }
+
 }
