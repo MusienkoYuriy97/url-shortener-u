@@ -41,6 +41,11 @@ public class ExceptionsHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(JwtTokenException.class)
+    protected ResponseEntity<?> wrongJwt(Exception e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(ShortUrlNotFoundException.class)
     protected ResponseEntity<?> shortUrlNotFound(Exception e) {
         return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

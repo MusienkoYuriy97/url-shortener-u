@@ -2,6 +2,7 @@ package by.solbegsoft.shortener.demo.service;
 
 import by.solbegsoft.shortener.demo.common.ProtocolChecker;
 import by.solbegsoft.shortener.demo.common.StringGenerator;
+import by.solbegsoft.shortener.demo.exception.JwtTokenException;
 import by.solbegsoft.shortener.demo.exception.ShortUrlNotFoundException;
 import by.solbegsoft.shortener.demo.exception.UrlDataException;
 import by.solbegsoft.shortener.demo.model.Url;
@@ -11,13 +12,7 @@ import by.solbegsoft.shortener.demo.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.servlet.support.RequestContext;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -42,30 +37,32 @@ public class UrlService {
             return optionalUrl.get().getOriginUrl();
         }else {
             log.error("Short url {} doesn't exist", shortUrl);
-            throw new ShortUrlNotFoundException();
+            throw new ShortUrlNotFoundException("Short url not found");
         }
     }
 
-    public Url save(UrlCreateRequest urlCreateRequest, HttpServletRequest request) {
+    public Url save(UrlCreateRequest urlCreateRequest) {
         log.info("Create short url by origin url");
-        String userUuid = jwtTokenProvider.getUuid(request.getHeader("Authorization"));
+        String uuid = jwtTokenProvider.getUuid();
+        if (uuid == null){
+            log.error("User uuid is null");
+            throw new JwtTokenException("User uuid is null");
+        }
         urlCreateRequest.setOriginUrl(ProtocolChecker.setPrefix(urlCreateRequest.getOriginUrl()));
         Url url = new Url();
         url.setOriginUrl(urlCreateRequest.getOriginUrl());
         url.setShortUrl(StringGenerator.generate(10));
-        url.setUserUuid(UUID.fromString(userUuid));
+        url.setUserUuid(UUID.fromString(uuid));
         return urlRepository.save(url);
     }
 
-    public List<Url> getAllByUuid(HttpServletRequest request) {
-        final SecurityContext context = SecurityContextHolder.getContext();
-        final Authentication authentication = context.getAuthentication();
-        final Object principal = authentication.getPrincipal();
-        String userUuid = jwtTokenProvider.getUuid(request.getHeader("Authorization"));
-        log.info("Get url list");
-        if (userUuid == null){
-            throw new RuntimeException("");
+    public List<Url> getAllByUuid() {
+        log.info("Get all url list");
+        String uuid = jwtTokenProvider.getUuid();
+        if (uuid == null){
+            log.error("User uuid is null");
+            throw new JwtTokenException("User uuid is null");
         }
-        return urlRepository.getAllByUserUuid(UUID.fromString(userUuid));
+        return urlRepository.getAllByUserUuid(UUID.fromString(uuid));
     }
 }
