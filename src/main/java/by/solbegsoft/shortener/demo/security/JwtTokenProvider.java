@@ -19,6 +19,8 @@ public class JwtTokenProvider {
     private String header;
     @Value("${jwt.prefix}")
     private String prefix;
+    @Value("${jwt.claim.uuid}")
+    private String claimUuid;
 
     @PostConstruct
     protected void init(){
@@ -36,7 +38,7 @@ public class JwtTokenProvider {
                     .setSigningKey(secretKey)
                     .parseClaimsJws(token)
                     .getBody()
-                    .get("uuid", String.class);
+                    .get(claimUuid, String.class);
         }else {
             throw new JwtTokenException("Jwt token is expired!");
         }
@@ -53,6 +55,6 @@ public class JwtTokenProvider {
 
     private String getBearerToken(){
         return  ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
-                .getRequest().getHeader("Authorization");
+                .getRequest().getHeader(header);
     }
 }
