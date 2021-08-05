@@ -11,7 +11,13 @@ import by.solbegsoft.shortener.demo.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.servlet.support.RequestContext;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -52,6 +58,9 @@ public class UrlService {
     }
 
     public List<Url> getAllByUuid(HttpServletRequest request) {
+        final SecurityContext context = SecurityContextHolder.getContext();
+        final Authentication authentication = context.getAuthentication();
+        final Object principal = authentication.getPrincipal();
         String userUuid = jwtTokenProvider.getUuid(request.getHeader("Authorization"));
         log.info("Get url list");
         if (userUuid == null){
